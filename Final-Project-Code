@@ -1,0 +1,1074 @@
+#include<iostream>
+#include<fstream>
+#include<algorithm>
+#include<set>
+#include<vector>
+#include<cstdio>
+#include<conio.h>
+#include<string>
+#include<cstring>
+#include<cstdlib>
+#include<cmath>
+using namespace std;
+class Rating{
+	public:
+		Rating(int i=0,int s=0,string is=""):id(i),score(s),isbn(is){}
+		bool operator<(const Rating &b)const{
+			if(score!=b.score){
+				return score>b.score;
+			}
+			if(isbn!=b.isbn){
+				return isbn<b.isbn;
+			}
+			return id<b.id;
+		}
+		int getid()const{
+			return id;
+		}
+		int getscore()const{
+			return score;
+		}
+		string getisbn()const{
+			return isbn;
+		}
+	private:
+		int id,score;
+		string isbn;
+};
+class Book{
+	public:
+		Book(int y=0,string i="",string t="",string a="",string p=""):year(y),isbn(i),title(t),author(a),publisher(p){
+			score=0;
+		}
+		bool operator<(const Book &b)const{
+			return isbn<b.isbn;
+		}
+		string getisbn()const{
+			return isbn;
+		}
+		string gettitle()const{
+			return title;
+		}
+		string getauthor()const{
+			return author;
+		}
+		string getpublisher()const{
+			return publisher;
+		}
+		int getyear()const{
+			return year;
+		}
+		double getscore()const{
+			if(score){
+				return 1.0*score/ratings.size();
+			}
+			return 0;
+		}
+		void changeyear(int y){
+			year=y;
+		}
+		void changetitle(string i){
+			isbn=i;
+		}
+		void changeauthor(string a){
+			author=a;
+		}
+		void changepublisher(string p){
+			publisher=p;
+		}
+		void addrating(int i,int s,string is){
+			ratings.insert(Rating(i,s,is));
+			score+=s;
+		}
+		set<Rating>ratings;
+	private:
+		int year;//计算平均成绩时注意num=0的情况
+		long long score;
+		string isbn,title,author,publisher;
+};
+class RelateBook{
+	public:
+		RelateBook(string i,double s):isbn(i),score(s){}
+		bool operator<(const RelateBook &b)const{
+			return score>b.score;
+		}
+		string getisbn()const{
+			return isbn;
+		}
+		double getscore()const{
+			return score;
+		}
+	private:
+		string isbn;
+		double score;
+};
+class User{
+	public:
+		User(int i=0,int a=0,string pa="",string n="",string pl=""):id(i),age(a),password(pa),name(n),place(pl){
+			score=0;
+		}
+		bool operator<(const User &b)const{
+			return id<b.id;
+		}
+		int getid()const{
+			return id;
+		}
+		int getage()const{
+			return age;
+		}
+		string getpassword()const{
+			return password;
+		}
+		string getname()const{
+			return name;
+		}
+		string getplace()const{
+			return place;
+		}
+		double getscore()const{
+			if(score){
+				return 1.0*score/ratings.size();
+			}
+			return 0;
+		}
+		void changeage(int a){
+			age=a;
+		}
+		void changepassword(string p){
+			password=p;
+		}
+		void changename(string n){
+			name=n;
+		}
+		void changeplace(string p){
+			place=p;
+		}
+		void addrating(int i,int s,string is){
+			ratings.insert(Rating(i,s,is));
+			score+=s;
+		}
+		set<Rating>ratings;
+	private:
+		int id,age;
+		long long score;
+		string password,name,place;
+};
+class RelateUser{
+	public:
+		RelateUser(int i,double s):id(i),score(s){}
+		bool operator<(const RelateUser &b)const{
+			return score>b.score;
+		}
+		int getid()const{
+			return id;
+		}
+		double getscore()const{
+			return score;
+		}
+	private:
+		int id;
+		double score;
+};
+vector<Book>books;
+vector<User>users;
+ostream& operator<<(ostream &os,Rating r){
+	os<<"\tID："<<r.getid()<<"\tISBN："<<r.getisbn()<<"\t评分："<<r.getscore()<<endl;
+	return os;
+}
+ostream& operator<<(ostream &os,Book b){
+	os<<"ISBN："<<b.getisbn()<<endl;
+	os<<"书名："<<b.gettitle()<<endl;
+	os<<"作者；"<<b.getauthor()<<endl;
+	os<<"出版年份："<<b.getyear()<<endl;
+	os<<"出版方："<<b.getpublisher()<<endl;
+	os<<"平均得分："<<b.getscore()<<endl;
+	os<<"相关读者："<<endl;
+	int num=0;
+	for(set<Rating>::iterator it=b.ratings.begin();num<5&&it!=b.ratings.end();++it,++num){//控制相关读者人数
+		os<<*it<<endl;
+	}
+	return os;
+}
+ostream& operator<<(ostream &os,User u){
+	os<<"ID："<<u.getid()<<endl;
+	os<<"昵称："<<u.getname()<<endl;
+	os<<"年龄："<<u.getage()<<endl;
+	os<<"地域："<<u.getplace()<<endl;
+	os<<"相关书籍："<<endl;
+	int num=0;
+	for(set<Rating>::iterator it=u.ratings.begin();num<5&&it!=u.ratings.end();++it,++num){//控制相关书籍数
+		os<<*it<<endl;
+	}
+	return os;
+}
+void sql(){
+	ifstream infile;
+	char s[10005],*p;
+	int num=0;
+	infile.open("Books.txt",ios::in);
+	while(infile.getline(s,10005)&&strcmp(s,"")){
+		int year;
+		char isbn[10005],title[10005],author[10005],publisher[10005];
+		p=strtok(s,"+");
+		year=atoi(p);
+		p=strtok(NULL,"+");
+		strcpy(isbn,p);
+		p=strtok(NULL,"+");
+		strcpy(title,p);
+		p=strtok(NULL,"+");
+		strcpy(author,p);
+		p=strtok(NULL,"+");
+		strcpy(publisher,p);
+		books.push_back(Book(year,isbn,title,author,publisher));
+	}
+	infile.close();
+	sort(books.begin(),books.end());
+	infile.open("Users.txt",ios::in);
+	users.push_back(User(0,0,"admin","",""));
+	while(infile.getline(s,10005)&&strcmp(s,"")){
+		int id=0,age=0,len;
+		char password[10005],name[10005],place[10005];
+		for(p=s;*p!='+';++p){
+			id=id*10+*p-'0';
+		}
+		for(++p;*p!='+';++p){
+			age=age*10+*p-'0';
+		}
+		for(++p,len=0;*p!='+';++p){
+			password[len++]=*p;
+		}
+		password[len]='\0';
+		for(++p,len=0;*p!='+';++p){
+			name[len++]=*p;
+		}
+		name[len]='\0';
+		strcpy(place,p+1);
+		users.push_back(User(id,age,password,name,place));
+	}
+	infile.close();
+	sort(users.begin(),users.end());
+	infile.open("Ratings.txt",ios::in);
+	while(infile.getline(s,10005)&&strcmp(s,"")){
+		int id;
+		int score;
+		char isbn[10005];
+		p=strtok(s,"+");
+		id=atoi(p);
+		p=strtok(NULL,"+");
+		score=atoi(p);
+		p=strtok(NULL,"+");
+		strcpy(isbn,p);
+		vector<Book>::iterator bit=lower_bound(books.begin(),books.end(),Book(0,isbn,"","",""));
+		if(bit!=books.end()&&bit->getisbn()==isbn){
+			vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(id,0,"","",""));
+			if(uit!=users.end()&&uit->getid()==id){
+				bit->addrating(id,score,isbn);
+				uit->addrating(id,score,isbn);
+			}
+		}
+	}
+	infile.close();
+}
+bool mainmenu(){
+	system("cls");
+	cout<<"\t   您好，请选择您所需要的操作"<<endl;
+	cout<<"\t【===       1.注册       ===】"<<endl;
+	cout<<"\t【===       2.登录       ===】"<<endl;
+	cout<<"\t【===       3.退出       ===】"<<endl;
+	return true;
+}
+/*---------主菜单-------------*/
+bool menu1(string name){
+	system("cls");
+	cout<<name<<endl;
+	cout<<"\t       我们为您提供以下服务:"<<endl;
+	cout<<"\t【===    1.为您推荐的书单      ===】"<<endl;
+	cout<<"\t【===    2.我想找书            ===】"<<endl;
+	cout<<"\t【===    3.为您推荐的好友      ===】"<<endl;
+	cout<<"\t【===    4.搜索用户            ===】"<<endl;
+	cout<<"\t【===    5.修改个人用户信息    ===】"<<endl;
+	cout<<"\t【===    6.注销用户            ===】"<<endl;
+	cout<<"\t【===    7.退出登录            ===】"<<endl;
+	cout<<"\t 请输入对应编号:"<<endl;
+	return true;
+}
+
+/*-----推荐书目及书本查找-----*/
+void recommendbook(User &user){
+	bool flag;
+	vector<RelateUser>relateusers;
+	vector<RelateBook>relatebooks;
+	for(set<Rating>::iterator rit=user.ratings.begin();rit!=user.ratings.end();++rit){
+		vector<Book>::iterator bit=lower_bound(books.begin(),books.end(),Book(0,rit->getisbn(),"","",""));
+		if(bit!=books.end()&&bit->getisbn()==rit->getisbn()){
+			for(set<Rating>::iterator brit=bit->ratings.begin();brit!=bit->ratings.end();++brit){
+				vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(brit->getid(),0,"","",""));
+				if(uit!=users.end()&&uit->getid()!=user.getid()&&uit->getid()==brit->getid()){
+					flag=true;
+					for(vector<RelateUser>::iterator ruit=relateusers.begin();ruit!=relateusers.end();++ruit){
+						if(ruit->getid()==uit->getid()){
+							flag=false;
+							break;
+						}
+					}
+					if(flag){
+						double n=0,d1=0,d2=0,ra=user.getscore(),rb=uit->getscore();
+						for(set<Rating>::iterator rit2=user.ratings.begin();rit2!=user.ratings.end();++rit2){
+							for(set<Rating>::iterator ait=uit->ratings.begin();ait!=uit->ratings.end();++ait){
+								if(rit2->getisbn()==ait->getisbn()){
+									n+=(rit2->getscore()-ra)*(ait->getscore()-rb);
+									d1+=(rit2->getscore()-ra)*(rit2->getscore()-ra);
+									d2+=(ait->getscore()-rb)*(ait->getscore()-rb);
+								}
+							}
+						}
+						if(d1&&d2){
+							relateusers.push_back(RelateUser(uit->getid(),n/sqrt(d1)/sqrt(d2)));
+						}
+					}
+				}
+			}
+		}
+	}
+	sort(relateusers.begin(),relateusers.end());
+	if(relateusers.size()>100){//最多保留100个相关用户
+		relateusers.erase(relateusers.begin()+100,relateusers.end());
+	}
+	for(vector<RelateUser>::iterator ruit=relateusers.begin();ruit!=relateusers.end();++ruit){
+		vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(ruit->getid(),0,"","",""));
+		if(uit!=users.end()&&uit->getid()==ruit->getid()){
+			for(set<Rating>::iterator rit=uit->ratings.begin();rit!=uit->ratings.end();++rit){
+				flag=true;
+				for(set<Rating>::iterator urit=user.ratings.begin();urit!=user.ratings.end();++urit){
+					if(urit->getisbn()==rit->getisbn()){
+						flag=false;
+						break;
+					}
+				}
+				for(vector<RelateBook>::iterator rbit=relatebooks.begin();rbit!=relatebooks.end();++rbit){
+					if(rbit->getisbn()==rit->getisbn()){
+						flag=false;
+						break;
+					}
+				}
+				if(flag){
+					double n=0,d=0;
+					for(vector<RelateUser>::iterator ruit2=relateusers.begin();ruit2!=relateusers.end();++ruit2){
+						vector<User>::iterator uit2=lower_bound(users.begin(),users.end(),User(ruit2->getid(),0,"","",""));
+						if(uit2!=users.end()&&uit2->getid()==ruit2->getid()){
+							for(set<Rating>::iterator rit2=uit2->ratings.begin();rit2!=uit2->ratings.end();++rit2){
+								if(rit2->getisbn()==rit->getisbn()){
+									n+=ruit2->getscore()*(rit2->getscore()-uit2->getscore());
+									d+=ruit2->getscore();
+								}
+							}
+						}
+					}
+					if(!d){
+						relatebooks.push_back(RelateBook(rit->getisbn(),n/d));
+					}
+				}
+			}
+		}
+	}
+	int num=0;
+	sort(relatebooks.begin(),relatebooks.end());
+	for(vector<RelateBook>::iterator rbit=relatebooks.begin();num<10&&rbit!=relatebooks.end();++rbit,++num){
+		vector<Book>::iterator bit=lower_bound(books.begin(),books.end(),Book(0,rbit->getisbn(),"","",""));
+		cout<<*bit<<endl;
+	}
+	if(num<10){
+		relatebooks.clear();
+		for(vector<Book>::iterator bit=books.begin();bit!=books.end();++bit){
+			if(bit->getscore()>9){
+				relatebooks.push_back(RelateBook(bit->getisbn(),bit->getscore()*bit->ratings.size()));
+			}
+		}
+		sort(relatebooks.begin(),relatebooks.end());
+		for(vector<RelateBook>::iterator rbit=relatebooks.begin();num<10&&rbit!=relatebooks.end();++rbit,++num){
+			vector<Book>::iterator bit=lower_bound(books.begin(),books.end(),Book(0,rbit->getisbn(),"","",""));
+			cout<<*bit<<endl;
+		}
+	}
+}
+bool submenu12(User &user){
+    system("cls");
+    cout<<user.getname()<<endl;
+    cout<<"\t         我想找书"<<endl;
+	cout<<"\t【===    1.通过ISBN搜索图书      ===】"<<endl;
+	cout<<"\t【===    2.通过书名搜索图书      ===】"<<endl;
+	cout<<"\t【===    3.通过作者搜索图书      ===】"<<endl;
+	cout<<"\t【===    4.通过出版方搜索图书    ===】"<<endl;
+	cout<<"\t【===    5.返回上一层            ===】"<<endl;
+	return true;
+}
+void booksearch(User &user,int opt){
+	int num=0;
+	string choose;
+	vector<Book>::iterator it,bit;
+	cout<<"搜索：";
+	getline(cin,choose);
+	cout<<endl;
+	cout<<"\t【===    搜索结果如下:    ===】"<<endl;
+	int i=0;
+	switch(opt){
+		case 1:
+			it=lower_bound(books.begin(),books.end(),Book(0,choose,"","",""));
+				if(it!=books.end()&&it->getisbn()==choose){
+				cout<<*it<<endl;
+				bit=it;
+				++num;
+			}
+			break;
+		case 2:
+
+			for(it=books.begin(),i=0;it!=books.end()&&i<10;++it){
+				if((it->gettitle().find(choose))!=std::string::npos){
+					cout<<*it<<endl;
+					bit=it;
+					++num;
+					++i;
+				}
+			}
+			break;
+		case 3:
+			for(it=books.begin(),i=0;it!=books.end()&&i<10;++it){
+				if((it->getauthor().find(choose))!=std::string::npos){
+					cout<<*it<<endl;
+					bit=it;
+					++num;
+					++i;
+				}
+			}
+			break;
+		case 4:
+			for(it=books.begin(),i=0;it!=books.end()&&i<10;++it){
+				if((it->getpublisher().find(choose))!=std::string::npos){
+					cout<<*it<<endl;
+					bit=it;
+					++num;
+					++i;
+				}
+			}
+			break;
+	}
+	if(!num){
+		cout<<"【===    抱歉，查无此书!  ===】"<<endl;
+	}
+	else{
+		cout<<"是否给该书评分？【Y/N】:";
+		getline(cin,choose);
+		if(choose=="Y"||choose=="y"){
+			if(num==1){
+				for(set<Rating>::iterator rit=user.ratings.begin();rit!=user.ratings.end();++rit){
+					if(rit->getisbn()==bit->getisbn()){
+						cout<<"您给该书评分为："<<rit->getscore()<<endl;
+						system("pause");
+						return;
+					}
+				}
+				cout<<"评分（0-10）：";
+				getline(cin,choose);
+				int score=atoi(choose.c_str());
+				if(score>10){
+					score=10;
+				}
+				bit->addrating(user.getid(),score,bit->getisbn());
+				user.addrating(user.getid(),score,bit->getisbn());
+				ofstream outfile("Ratings.txt",ios::app);
+				outfile<<user.getid()<<"+"<<score<<"+"<<bit->getisbn()<<endl;
+				outfile.close();
+			}
+			else{
+				cout<<"抱歉，相关书籍多于一本，无法评分！"<<endl;
+			}
+		}
+	}
+	system("pause");
+}
+void search_book(User &user){
+    system("cls");
+	string choose;
+	while(submenu12(user)){
+		getline(cin,choose);
+		switch(atoi(choose.c_str())){
+			case 1:booksearch(user,1);break;
+			case 2:booksearch(user,2);break;
+			case 3:booksearch(user,3);break;
+			case 4:booksearch(user,4);break;
+			case 5:return;
+			default:cout<<"请输入数字1-5！"<<endl;system("pause");break;
+		}
+	}
+}
+void book_for_you(User &user){
+	system("cls");
+	string choose;
+	cout<<user.getname()<<endl;
+	cout<<"\t         以下是为您推荐的书目："<<endl;
+	recommendbook(user);
+    cout<<"【===    1.返回上一层    ===】"<<endl;
+	cout<<"【===    2.搜索书籍      ===】"<<endl;
+	getline(cin,choose);
+    switch(atoi(choose.c_str())){
+        case 1:return;
+        case 2:search_book(user);break;
+        default:cout<<"请输入数字1或2"<<endl;system("pause");break;
+    }
+}
+
+/*------推荐好友及用户查找------*/
+void recommendfriend(User &user){
+	bool flag;
+	vector<RelateUser>relateusers;
+	for(set<Rating>::iterator rit=user.ratings.begin();rit!=user.ratings.end();++rit){
+		vector<Book>::iterator bit=lower_bound(books.begin(),books.end(),Book(0,rit->getisbn(),"","",""));
+		if(bit!=books.end()&&bit->getisbn()==rit->getisbn()){
+			for(set<Rating>::iterator brit=bit->ratings.begin();brit!=bit->ratings.end();++brit){
+				vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(brit->getid(),0,"","",""));
+				if(uit!=users.end()&&uit->getid()!=user.getid()&&uit->getid()==brit->getid()){
+					flag=true;
+					for(vector<RelateUser>::iterator ruit=relateusers.begin();ruit!=relateusers.end();++ruit){
+						if(ruit->getid()==uit->getid()){
+							flag=false;
+							break;
+						}
+					}
+					if(flag){
+						double n=0,d1=0,d2=0,ra=user.getscore(),rb=uit->getscore();
+						for(set<Rating>::iterator rit2=user.ratings.begin();rit2!=user.ratings.end();++rit2){
+							for(set<Rating>::iterator ait=uit->ratings.begin();ait!=uit->ratings.end();++ait){
+								if(rit2->getisbn()==ait->getisbn()){
+									n+=(rit2->getscore()-ra)*(ait->getscore()-rb);
+									d1+=(rit2->getscore()-ra)*(rit2->getscore()-ra);
+									d2+=(ait->getscore()-rb)*(ait->getscore()-rb);
+								}
+							}
+						}
+						if(d1&&d2){
+							relateusers.push_back(RelateUser(uit->getid(),n/sqrt(d1)/sqrt(d2)));
+						}
+					}
+				}
+			}
+		}
+	}
+	sort(relateusers.begin(),relateusers.end());
+	int num=0;
+	for(vector<RelateUser>::iterator ruit=relateusers.begin();num<10&&ruit!=relateusers.end();++ruit,++num){
+		vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(ruit->getid(),0,"","",""));
+		if(uit!=users.end()&&uit->getid()==ruit->getid()){
+			cout<<*uit<<endl;
+		}
+	}
+	if(num<10){
+		relateusers.clear();
+		for(vector<User>::iterator uit=users.begin();uit!=users.end();++uit){
+			if(uit->getage()==user.getage()){
+				relateusers.push_back(RelateUser(uit->getid(),1));
+			}
+			else if(uit->getplace()==user.getplace()){
+				relateusers.push_back(RelateUser(uit->getid(),1.0/abs(uit->getage()-user.getage())));
+			}
+		}
+		sort(relateusers.begin(),relateusers.end());
+		for(vector<RelateUser>::iterator ruit=relateusers.begin();num<10&&ruit!=relateusers.end();++ruit,++num){
+			vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(ruit->getid(),0,"","",""));
+			if(uit!=users.end()&&uit->getid()==ruit->getid()){
+				cout<<*uit<<endl;
+			}
+		}
+	}
+	if(num<10){
+		relateusers.clear();
+		for(vector<User>::iterator uit=users.begin();uit!=users.end();++uit){
+			relateusers.push_back(RelateUser(uit->getid(),uit->ratings.size()));
+		}
+		sort(relateusers.begin(),relateusers.end());
+		for(vector<RelateUser>::iterator ruit=relateusers.begin();num<10&&ruit!=relateusers.end();++ruit,++num){
+			vector<User>::iterator uit=lower_bound(users.begin(),users.end(),User(ruit->getid(),0,"","",""));
+			if(uit!=users.end()&&uit->getid()==ruit->getid()){
+				cout<<*uit<<endl;
+			}
+		}
+	}
+}
+bool submenu13(User &user){
+	system("cls");
+	cout<<user.getname()<<endl;
+    cout<<"\t         搜索用户"<<endl;
+	cout<<"\t【===    1.按id搜索好友      ===】"<<endl;
+	cout<<"\t【===    2.按昵称搜索好友    ===】"<<endl;
+	cout<<"\t【===    3.按年龄搜索好友    ===】"<<endl;
+	cout<<"\t【===    4.按地域搜索好友    ===】"<<endl;
+	cout<<"\t【===    5.返回上一层        ===】"<<endl;
+
+	return true;
+}
+void friendsearch(User &user,int opt){
+	int num=0;
+	string choose;
+	vector<User>::iterator it;
+	cout<<"搜索：";
+	getline(cin,choose);
+	if((opt==1||opt==3)&&!atoi(choose.c_str())){
+		cout<<"抱歉，输入有误！"<<endl;
+		system("pause");
+		return;
+	}
+    cout<<endl;
+	cout<<"\t【===    搜索结果如下:    ===】"<<endl;
+	int i=0;
+	switch(opt){
+		case 1:
+			it=lower_bound(users.begin(),users.end(),User(atoi(choose.c_str()),0,"","",""));
+			if(it!=users.end()&&it->getid()==atoi(choose.c_str())){
+				cout<<*it<<endl;
+				++num;
+			}
+			break;
+		case 2:
+			for(it=users.begin();it!=users.end();++it){
+				if(it->getname()==choose){
+					cout<<*it<<endl;
+					++num;
+				}
+			}
+			break;
+		case 3:
+			for(it=users.begin(),i=0;it!=users.end()&&i<10;++it){
+				if(it->getage()==atoi(choose.c_str())){
+					cout<<*it<<endl;
+					++num;
+					++i;
+				}
+			}
+			break;
+		case 4:
+			for(it=users.begin(),i=0;it!=users.end()&&i<10;++it){
+				if((it->getplace().find(choose))!=std::string::npos){
+					cout<<*it<<endl;
+					++num;
+					++i;
+				}
+			}
+			break;
+	}
+	if(!num){
+		cout<<"\t【===    抱歉，查无此人!  ===】"<<endl;
+	}
+	system("pause");
+}
+void search_friends(User &user){
+	string choose;
+	while(submenu13(user)){
+		getline(cin,choose);
+		switch(atoi(choose.c_str())){
+			case 1:friendsearch(user,1);break;
+			case 2:friendsearch(user,2);break;
+			case 3:friendsearch(user,3);break;
+			case 4:friendsearch(user,4);break;
+			case 5:return;
+			default:cout<<"请输入数字1-5"<<endl;system("pause");break;
+		}
+	}
+}
+void friend_for_you(User &user){
+	system("cls");
+	string choose;
+	cout<<user.getname()<<endl;
+	cout<<"\t         以下是为您推荐的好友："<<endl;
+	recommendfriend(user);
+	cout<<"【===    1.返回上一层    ===】"<<endl;
+	cout<<"【===    2.查找用户      ===】"<<endl;
+	getline(cin,choose);
+    switch(atoi(choose.c_str())){
+        case 1:return;
+        case 2:search_friends(user);break;
+        default:cout<<"请输入数字1或2"<<endl;system("pause");break;
+    }
+}
+
+/*-------修改用户信息---------*/
+bool submenu14(string name){
+	system("cls");
+	cout<<name<<endl;
+	cout<<"\t         修改个人用户信息"<<endl;
+	cout<<"\t【===    1.修改昵称      ===】"<<endl;
+	cout<<"\t【===    2.修改密码      ===】"<<endl;
+	cout<<"\t【===    3.修改年龄      ===】"<<endl;
+	cout<<"\t【===    4.修改地域      ===】"<<endl;
+	cout<<"\t【===    5.返回上一层    ===】"<<endl;
+	return true;
+}
+void userchange(User &user,int opt){
+	string choose,tmp;
+	cout<<"修改为：";
+	getline(cin,choose);
+	switch(opt){
+		case 1:user.changename(choose);break;
+		case 2:
+			cout<<"请再次输入密码：";
+			getline(cin,tmp);
+			if(choose==tmp){
+				user.changepassword(choose);
+			}
+			else{
+				cout<<"两次输入的密码不一致！"<<endl;
+			}
+			break;
+		case 3:user.changeage(atoi(choose.c_str()));break;
+		case 4:user.changeplace(choose);break;
+	}
+	cout<<endl;
+	cout<<"\t以下是您更改之后的用户信息"<<endl;
+	cout<<user<<endl;
+	ofstream outfile("Users.txt",ios::out);
+	for(vector<User>::iterator it=users.begin();it!=users.end();++it){
+		outfile<<it->getid()<<"+"<<it->getage()<<"+"<<it->getpassword()<<"+"<<it->getname()<<"+"<<it->getplace()<<endl;
+	}
+	outfile.close();
+	system("pause");
+}
+void userchange(User &user){
+	string choose;
+	system("cls");
+	cout<<user.getname()<<endl;
+	while(submenu14(user.getname())){
+		getline(cin,choose);
+		switch(atoi(choose.c_str())){
+			case 1:userchange(user,1);break;
+			case 2:userchange(user,2);break;
+			case 3:userchange(user,3);break;
+			case 4:userchange(user,4);break;
+			case 5:return;
+			default:cout<<"请输入数字1-5！"<<endl;system("pause");break;
+		}
+	}
+}
+void userdelete(User &user){
+	string choose;
+	system("cls");
+	cout<<user.getname()<<endl;
+	cout<<"您确定注销该用户？（注销后该用户将不存在）"<<endl;
+	cout<<"请输入【Y/N】(Yes/No)"<<endl;
+	getline(cin,choose);
+	if(choose=="Y"||choose=="y"){
+		vector<User>::iterator it=lower_bound(users.begin(),users.end(),user);
+		users.erase(it);
+		ofstream outfile("Users.txt",ios::out);
+		for(it=users.begin();it!=users.end();++it){
+			outfile<<it->getid()<<"+"<<it->getage()<<"+"<<it->getpassword()<<"+"<<it->getname()<<"+"<<it->getplace()<<endl;
+		}
+		outfile.close();
+		exit(0);
+	}
+}
+bool menu2(string name){
+	system("cls");
+	cout<<name<<endl;
+	cout<<"\t         您好，管理员！"<<endl;
+	cout<<"\t         请选择您的操作"<<endl;
+	cout<<"\t【===    1.添加图书      ===】"<<endl;
+	cout<<"\t【===    2.修改图书信息  ===】"<<endl;
+	cout<<"\t【===    3.删除图书      ===】"<<endl;
+	cout<<"\t【===    4.退出登录      ===】"<<endl;
+	return true;
+}
+void bookadd(string name){
+	int year;
+	string isbn,title,author,publisher;
+	system("cls");
+	cout<<name<<endl;
+	cout<<"\t         添加图书"<<endl;
+	cout<<"请输入ISBN: ";
+	getline(cin,isbn);
+	vector<Book>::iterator it=lower_bound(books.begin(),books.end(),Book(0,isbn,"","",""));
+	if(it!=books.end()&&it->getisbn()==isbn){
+		cout<<"该图书已存在！"<<endl;
+		cout<<"信息如下:"<<endl;
+		cout<<*it<<endl;
+		system("pause");
+	}
+	else{
+		cout<<"请输入书名：";
+		getline(cin,title);
+		cout<<"请输入作者：";
+		getline(cin,author);
+		cout<<"请输入出版年份：";
+		getline(cin,publisher);
+		year=atoi(publisher.c_str());
+		cout<<"请输入出版方：";
+		getline(cin,publisher);
+		cout<<endl;
+		cout<<"Waiting..."<<endl;
+		books.push_back(Book(year,isbn,title,author,publisher));
+		sort(books.begin(),books.end());
+		ofstream outfile("Books.txt",ios::app);
+		outfile<<year<<"+"<<isbn<<"+"<<title<<"+"<<author<<"+"<<publisher<<endl;
+		outfile.close();
+		cout<<"添加成功！"<<endl;
+		system("pause");
+	}
+}
+bool submenu22(){
+    cout<<"\t         请选择您的操作"<<endl;
+	cout<<"\t【===    1.修改书名        ===】"<<endl;
+	cout<<"\t【===    2.修改作者        ===】"<<endl;
+	cout<<"\t【===    3.修改出版年份    ===】"<<endl;
+	cout<<"\t【===    4.修改出版商      ===】"<<endl;
+	cout<<"\t【===    5.返回上一层      ===】"<<endl;
+	return true;
+}
+void bookchange(Book &book,int opt){
+	string choose;
+	cout<<"修改为：";
+	getline(cin,choose);
+	switch(opt){
+		case 1:book.changetitle(choose);break;
+		case 2:book.changeauthor(choose);break;
+		case 3:book.changeyear(atoi(choose.c_str()));break;
+		case 4:book.changepublisher(choose);break;
+	}
+	cout<<endl;
+	cout<<"\t以下是您更改之后的书本信息"<<endl;
+	cout<<book<<endl;
+	ofstream outfile("Books.txt",ios::out);
+	for(vector<Book>::iterator it=books.begin();it!=books.end();++it){
+		outfile<<it->getyear()<<"+"<<it->getisbn()<<"+"<<it->gettitle()<<"+"<<it->getauthor()<<"+"<<it->getpublisher()<<endl;
+	}
+	outfile.close();
+	cout<<"修改成功！"<<endl;
+	system("pause");
+}
+void bookchange(string name){
+	string isbn,choose;
+	system("cls");
+	cout<<name<<endl;
+	cout<<"\t         修改图书信息"<<endl;
+	cout<<"请输入ISBN:";
+	getline(cin,isbn);
+	vector<Book>::iterator it=lower_bound(books.begin(),books.end(),Book(0,isbn,"","",""));
+	if(it!=books.end()&&it->getisbn()==isbn){
+		submenu22();
+		do{
+			getline(cin,choose);
+			switch(atoi(choose.c_str())){
+				case 1:bookchange(*it,1);break;
+				case 2:bookchange(*it,2);break;
+				case 3:bookchange(*it,3);break;
+				case 4:bookchange(*it,4);break;
+				case 5:return;
+				default:cout<<"请输入数字1-5！"<<endl;system("pause");break;
+			}
+		}while(atoi(choose.c_str())<1||atoi(choose.c_str())>5);
+	}
+	else{
+		cout<<"该图书不存在！"<<endl;
+	}
+	system("pause");
+}
+void bookdelete(string name){
+	string isbn,choose;
+	system("cls");
+	cout<<name<<endl;
+	cout<<"\t         删除图书"<<endl;
+	cout<<"请输入ISBN：";
+	getline(cin,isbn);
+	vector<Book>::iterator it=lower_bound(books.begin(),books.end(),Book(0,isbn,"","",""));
+	if(it!=books.end()&&it->getisbn()==isbn){
+    cout<<"确定删除该图书（删除后图书将不存在）？"<<endl;
+	cout<<"请输入【Y/N】(Yes/No)"<<endl;
+		getline(cin,choose);
+		if(choose=="Y"||choose=="y"){
+			books.erase(it);
+			ofstream outfile("Books.txt",ios::out);
+			for(it=books.begin();it!=books.end();++it){
+				outfile<<it->getyear()<<"+"<<it->getisbn()<<"+"<<it->gettitle()<<"+"<<it->getauthor()<<"+"<<it->getpublisher()<<endl;
+			}
+			outfile.close();
+		}
+	}
+	else{
+		cout<<"该图书不存在！"<<endl;
+		system("pause");
+	}
+}
+
+/*----------注册和登录---------*/
+void enroll(){
+	system("cls");
+	char c;
+	int age,id=(users.end()-1)->getid()+1;
+	string name,place,password,tmp;
+	cout<<"您的id是："<<id<<endl;
+	cout<<"请设置您的密码：";
+	while(c=getch(),c!='\r'){
+	    if(c==8){
+            printf("%c %c",'\b','\b'); // 密码支持退格的实现
+            password=password.substr(0,password.length()-1);
+        }
+        //else if( c<33 || c>126)continue;
+        else{
+            password+=c;
+            cout<<"*";
+        }
+	}
+	cout<<endl;
+	cout<<"请再次输入您的密码：";
+	while(c=getch(),c!='\r'){
+        if(c==8){
+            printf("%c %c",'\b','\b'); // 密码支持退格的实现
+            tmp=tmp.substr(0,tmp.length()-1);
+
+        }
+        //if( c<33 || c>126)continue;
+        else{
+            tmp+=c;
+            cout<<"*";
+        }
+	}
+	cout<<endl;
+	while(password!=tmp){
+		cout<<"两次输入的密码不一致！"<<endl;
+		system("pause");
+        cout<<"请重新输入您的密码:(或者按ESC返回)";
+        while(c=getch(),c!='\r'){
+            if(c==27)return;
+            if(c==8){
+            printf("%c %c",'\b','\b'); // 密码支持退格的实现
+            tmp=tmp.substr(0,tmp.length()-1);
+
+        }
+        //if( c<33 || c>126)continue;
+        else{
+            tmp+=c;
+            cout<<"*";
+            }
+        }
+        cout<<endl;
+	}
+	cout<<"请输入您的昵称：";
+	getline(cin,name);
+	cout<<"请输入您的年龄：";
+	getline(cin,tmp);
+	age=atoi(tmp.c_str());
+	cout<<"请输入您的居住地：";
+	getline(cin,place);
+	users.push_back(User(id,age,password,name,place));
+	ofstream outfile("Users.txt",ios::app);
+	outfile<<id<<"+"<<age<<"+"<<password<<"+"<<name<<"+"<<place<<endl;
+	outfile.close();
+
+	cout<<"注册成功！请按回车进入您的用户界面 "<<endl;
+	getch();
+	system("cls");
+	string choose;
+    vector<User>::iterator it=lower_bound(users.begin(),users.end(),User(id,0,"","",""));
+		if(id){
+			while(menu1(it->getname())){
+				getline(cin,choose);
+				switch(atoi(choose.c_str())){
+					case 1:book_for_you(*it);break;
+					case 2:search_book(*it);break;
+					case 3:friend_for_you(*it);break;
+					case 4:search_friends(*it);break;
+					case 5:userchange(*it);break;
+					case 6:userdelete(*it);break;
+					case 7:return;
+					default:cout<<"请输入数字1-7！"<<endl;system("pause");break;
+				}
+			}
+		}
+		else{//管理员
+			while(menu2("admin")){
+				getline(cin,choose);
+				switch(atoi(choose.c_str())){
+					case 1:bookadd("admin");break;
+					case 2:bookchange("admin");break;
+					case 3:bookdelete("admin");break;
+					case 4:return;
+					default:cout<<"请输入数字1-4！"<<endl;system("pause");break;
+				}
+			}
+		}
+}
+void login(){
+	char c;
+	int id;
+	string password,choose;
+	system("cls");
+	cout<<"请输入您的id：";
+	getline(cin,choose);
+	id=atoi(choose.c_str());
+	cout<<"请输入您的密码：";
+	while(c=getch(),c!='\r'){
+        if(c==8){
+            printf("%c %c",'\b','\b'); // 密码支持退格的实现
+            password=password.substr(0,password.length()-1);
+        }
+        else{
+            password+=c;
+            cout<<"*";
+        }
+	}
+
+	vector<User>::iterator it=lower_bound(users.begin(),users.end(),User(id,0,"","",""));
+	if(it!=users.end()&&it->getid()==id&&it->getpassword()==password){
+		if(id){
+			while(menu1(it->getname())){
+				getline(cin,choose);
+				switch(atoi(choose.c_str())){
+					case 1:book_for_you(*it);break;
+					case 2:search_book(*it);break;
+					case 3:friend_for_you(*it);break;
+					case 4:search_friends(*it);break;
+					case 5:userchange(*it);break;
+					case 6:userdelete(*it);break;
+					case 7:return;
+					default:cout<<"请输入数字1-7！"<<endl;system("pause");break;
+				}
+			}
+		}
+		else{//管理员
+			while(menu2("admin")){
+				getline(cin,choose);
+				switch(atoi(choose.c_str())){
+					case 1:bookadd("admin");break;
+					case 2:bookchange("admin");break;
+					case 3:bookdelete("admin");break;
+					case 4:return;
+					default:cout<<"请输入数字1-4！"<<endl;system("pause");break;
+				}
+			}
+		}
+	}
+	else{
+		cout<<"id或密码不正确！"<<endl;
+		system("pause");
+	}
+
+}
+
+int main(){
+	string choose;
+	system("color 3e");//设置页面颜色
+	sql();//读入文件
+	while(mainmenu()){
+		getline(cin,choose);//防止故意输入错误
+		switch(atoi(choose.c_str())){
+			case 1:enroll();break;
+			case 2:login();break;
+			case 3:return 0;
+			default:cout<<"请输入数字1-3!"<<endl;system("pause");break;
+		}
+	}
+}
+//set里的对象均为常对象，不方便更改
+//fflush,getch等函数在gcc中不支持
+//文件需要重新写
+//之前通过,去分割处理文本，因为各种原因经常出错
+//读取文件时发现前几个字符会乱码，改为ASCII编码即可
+//strtok无法分离出空字符串
+//为了防止恶意输入，全部采用getline(cin,string)的形式输入，数字则通过atoi(stirng.c_str())函数转化
+//无法重复修改评分
