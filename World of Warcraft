@@ -1,0 +1,242 @@
+#include<iostream>
+#include<string>
+#include<iomanip>
+#include<vector>
+using namespace std;
+int M1=0,M2=0;
+int order1[5]={2,3,4,1,0}; //red制造顺序
+int order2[5]={3,0,1,2,4}; //blue制造顺序
+/*--------武器的基本类型------*/
+string Weapon[3]={"sword","bomb","arrow"};
+/*--------武士的基本类----*/
+class dragon {
+public:
+    dragon(){};
+    dragon(const &d){};
+    int give_d(int i,int& M);
+    void print_d(int j,int who);
+    int live;
+private:
+    int weapon; //武器个数和种类
+    int number;  //编号
+    float morale;//士气
+};
+class ninja {
+public:
+    ninja(){};
+    int give_n(int i,int &M);
+    void print_n(int j,int who);
+    int live;
+private:
+    int wep[2]; //武器种类
+    int number;  //编号
+};
+class iceman {
+public:
+    iceman(){};
+    int give_i(int i,int &M);
+    void print_i(int j,int who);
+    int live;
+private:
+    int weapon; //武器个数和种类
+    int number;  //编号
+};
+class lion {
+public:
+    lion(){};
+    int give_l(int i,int &M);
+    void print_l(int j,int who);
+    int live;
+private:
+    int number;  //编号
+    int loyalty; //忠诚度
+};
+class wolf {
+public:
+    wolf(){};
+    int give_w(int i,int &M);
+    void print_w(int j,int who);
+    int live;
+private:
+    int number;  //编号
+};
+
+int dragon::give_d(int i,int& M){
+    i=i+1;
+    if(M-live>=0) {
+        number=i;
+        weapon=i%3;   //获得1个武器，名字为Weapon[i%3]
+        morale=(M-live)/(live);
+        M=M-live;
+        return 1;
+    }
+    return 0;
+}
+int ninja::give_n(int i,int &M){
+    i=i+1;
+    if(M-live>=0){
+        number=i;
+        wep[0]=i%3;   //获得2个武器
+        wep[1]=(i+1)%3;
+        M=M-live;
+        return 1;
+    }
+    return 0;
+}
+int iceman::give_i(int i,int &M) {
+    i=i+1;
+    if(M-live>=0){
+        number=i;
+        weapon=i%3;   //获得1个武器，名字为Weapon[i%3]
+        M=M-live;
+        return 1;
+    }
+    return 0;
+}
+int lion::give_l(int i,int &M){
+    i=i+1;
+    if(M-live>=0){
+        number=i;
+        loyalty=M-live;
+        M=M-live;
+        return 1;
+    }
+    return 0;
+}
+int wolf::give_w(int i,int &M){
+    i=i+1;
+    if(M-live>=0){
+        number=i;
+        M=M-live;
+        return 1;
+    }
+    return 0;
+}
+
+dragon d;
+ninja ni;
+iceman ic;
+lion l;
+wolf w;
+vector<dragon> dra;  //用以储存武士
+vector<ninja> nin;
+vector<iceman> ice;
+vector<lion>li;
+vector<wolf>wol;
+/*-------控制输出语句--------*/
+void dragon::print_d(int j,int who) {
+    cout<<setfill('0')<<setw(3)<<j;
+    if(who){
+        cout<<" red dragon "<<number<<" born with strength "<<live<<", ";
+        cout<<dra.size()<<" dragon in red headquarter"<<endl;
+    }
+    else{
+        cout<<" blue dragon "<<number<<" born with strength "<<live<<", ";
+        cout<<dra.size()<<" dragon in blue headquarter"<<endl;
+    }
+    cout<<"It has a "<<Weapon[weapon]<<", and its morale is "<<morale<<endl;
+}
+void ninja::print_n(int j,int who) {
+    cout<<setfill('0')<<setw(3)<<j;
+    if(who){
+        cout<<" red ninja "<<number<<" born with strength "<<live<<", ";
+        cout<<" ninja in red headquarter"<<'\n';
+    }
+    else{
+        cout<<" blue ninja "<<number<<" born with strength "<<live<<", ";
+        cout<<nin.size()<<" ninja in blue headquarter"<<'\n';
+    }
+    cout<<"It has a "<<Weapon[wep[0]]<<" and a "<<Weapon[wep[1]]<<endl;
+}
+void iceman::print_i(int j,int who) {
+    cout<<setfill('0')<<setw(3)<<j;
+    if(who){
+        cout<<" red iceman "<<number<<" born with strength "<<live<<", ";
+        cout<<ice.size()<<" iceman in red headquarter"<<endl;
+    }
+    else{
+        cout<<" blue iceman "<<number<<" born with strength "<<live<<", ";
+        cout<<ice.size()<<" iceman in blue headquarter"<<endl;
+    }
+    cout<<"It has a "<<Weapon[weapon]<<endl;
+}
+void lion::print_l(int j,int who) {
+    cout<<setfill('0')<<setw(3)<<j;
+    if(who){
+        cout<<" red lion "<<number<<" born with strength "<<live<<", ";
+        cout<<li.size()<<" lion in red headquarter"<<endl;
+    }
+    else{
+        cout<<" blue lion "<<number<<" born with strength "<<live<<", ";
+        cout<<li.size()<<" lion in blue headquarter"<<endl;
+    }
+    cout<<"Its loyalty is "<<loyalty<<endl;
+}
+void wolf::print_w(int j,int who) {
+    cout<<setfill('0')<<setw(3)<<j;
+    if(who){
+        cout<<" red wolf "<<number<<" born with strength "<<live<<", ";
+        cout<<wol.size()<<" wolf in red headquarter"<<endl;
+    }
+    else{
+        cout<<" blue wolf "<<number<<" born with strength "<<live<<", ";
+        cout<<wol.size()<<" wolf in blue headquarter"<<endl;
+    }
+}
+
+
+/*-------控制制造顺序-------*/
+int create(int k,int j,int &M,int who) {
+    int flag=0;
+    switch(k){
+    case 0:if(d.give_d(j,M)){dra.push_back(d);flag=1;d.print_d(j,who);}
+            break;
+    case 1:if(ni.give_n(j,M)){nin.push_back(ni);flag=1;ni.print_n(j,who);}
+            break;
+    case 2:if(ic.give_i(j,M)){ice.push_back(ic);flag=1;ic.print_i(j,who);}
+            break;
+    case 3:if(l.give_l(j,M)){li.push_back(l);flag=1;l.print_l(j,who);}
+            break;
+    case 4:if(w.give_w(j,M)){wol.push_back(w);flag=1;w.print_w(j,who);}
+            break;
+    default:break;
+    }
+    return flag;
+}
+
+int main(){
+    int i,j,k1=0,k2=0,n,tmp=0,mark1=0,mark2=0;
+    int red=1,blue=0;
+
+    cin>>n;
+    for(i=1;i<n+1;i++){
+        cin>>M1;
+        M2=M1;
+        cin>>d.live>>ni.live>>ic.live>>l.live>>w.live;
+        cout<<"Case:"<<i<<endl;
+        for(j=0;M1>=0||M2>=0;j++){
+            while(M1>0&&tmp<5){
+                if(create(order1[k1],j,M1,red)){k1++;break;}
+                k1++;tmp++;
+                if(k1==5)k1=0;
+            }
+            if((M1<=0&&!mark1)||(tmp>4&&!mark1)){
+                mark1=1;
+                cout<<setfill('0')<<setw(3)<<j<<" red headquarter stops making warriors"<<endl;
+            }
+            tmp=0;
+            while(M2>0&&tmp<5) {
+                if(create(order2[k2],j,M2,blue)){k2++;break;}
+                k2++;tmp++;
+                if(k2==5)k2=0;
+            }
+            if((M2<=0&&!mark2)||(tmp>4&&!mark2)){
+                mark2=1;
+                cout<<setfill('0')<<setw(3)<<j<<" blue headquarter stops making warriors"<<endl;
+            }
+            if(k1==5)k1=0;
+            if(k2==5)k2=0;
+        }
+    }
+    return 0;
+}
